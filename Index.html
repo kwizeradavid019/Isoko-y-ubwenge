@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISOKO Y'UBWENGE</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f0f4f8;margin:0;color:#172554}
+header{background:#075985;color:white;text-align:center;padding:25px 12px}
+header h1{font-size:23px}
+.container{max-width:650px;margin:20px auto;padding:15px}
+.card{background:white;padding:22px;border-radius:14px;box-shadow:0 3px 12px #0002}
+button{width:100%;padding:14px;margin:7px 0;border:0;border-radius:8px;background:#e0f2fe;color:#075985;font-size:16px;cursor:pointer}
+button:hover{background:#bae6fd}
+.primary{background:#0284c7;color:white}
+.option{border:1px solid #bae6fd;text-align:left}
+.option:disabled{opacity:1}
+#result{font-size:22px;font-weight:bold;text-align:center}
+footer{text-align:center;padding:20px;color:#64748b}
+</style>
+</head>
+<body>
+
+<header>
+<h1>ISOKO Y'UBWENGE</h1>
+<h3>UMUCO n'AMAHORO</h3>
+<p>Ubumenyi • Amateka • Ubwenge</p>
+</header>
+
+<div class="container">
+<div class="card">
+<h2>Ikaze mu marushanwa y'ubumenyi!</h2>
+<p>Subiza ibibazo, urebe amanota wabonye.</p>
+<p id="progress">Ikibazo 1 muri 20</p>
+<div id="quiz">
+<h3 id="question"></h3>
+<div id="answers"></div>
+</div>
+<div id="result" hidden></div>
+<button class="primary" id="next" onclick="nextQuestion()" hidden>Ikibazo gikurikira</button>
+<button class="primary" id="restart" onclick="restart()" hidden>Ongera ukine</button>
+<button onclick="shareResult()" id="share" hidden>Sangiza abandi amanota</button>
+</div>
+</div>
+
+<footer>
+ISOKO Y'UBWENGE UMUCO n'AMAHORO
+</footer>
+
+<script>
+// UMUYOBOZI: Ibibazo bishya byongerwa muri uru rutonde.
+const questions = [
+{q:"Umurwa mukuru w'u Rwanda ni uwuhe?",a:["Huye","Kigali","Musanze","Rubavu"],c:1},
+{q:"u Rwanda rwabonye ubwigenge ryari?",a:["1960","1961","1962","1963"],c:2},
+{q:"Ni ikihe gihugu cyakolonije u Rwanda nyuma y'Intambara ya Mbere y'Isi?",a:["Ubufaransa","Ububiligi","Ubutaliyani","Portugal"],c:1},
+{q:"U Rwanda rwinjiye mu Muryango w'Abibumbye mu wuhe mwaka?",a:["1962","1965","1970","1994"],c:0},
+{q:"Perezida wa mbere w'u Rwanda ni nde?",a:["Juvénal Habyarimana","Paul Kagame","Grégoire Kayibanda","Pasteur Bizimungu"],c:2},
+{q:"Ubwami mu Rwanda bwakuweho mu wuhe mwaka?",a:["1959","1961","1962","1973"],c:1},
+{q:"Urugamba rwo kubohora u Rwanda rwatangiye ryari?",a:["1 Ukwakira 1990","7 Mata 1994","4 Nyakanga 1994","1 Nyakanga 1962"],c:0},
+{q:"Kwibuka Jenoside yakorewe Abatutsi bitangira ryari buri mwaka?",a:["1 Mutarama","7 Mata","1 Nyakanga","4 Nyakanga"],c:1},
+{q:"Umunsi wo Kwibohora wizihizwa ryari?",a:["7 Mata","1 Gicurasi","4 Nyakanga","1 Ukwakira"],c:2},
+{q:"Jenoside yakorewe Abatutsi yabaye mu wuhe mwaka?",a:["1990","1992","1994","1996"],c:2},
+{q:"Ishyamba rya Nyungwe riherereye mu kihe gice cy'u Rwanda?",a:["Iburasirazuba","Amajyepfo y'uburengerazuba","Amajyaruguru","Hagati"],c:1},
+{q:"Pariki y'Akagera iherereye mu kihe gice cy'u Rwanda?",a:["Iburasirazuba","Iburengerazuba","Amajyepfo","Amajyaruguru"],c:0},
+{q:"Ikiyaga cya Kivu giherereye ku ruhe ruhande rw'u Rwanda?",a:["Iburasirazuba","Iburengerazuba","Amajyepfo","Amajyaruguru"],c:1},
+{q:"Ni uruhe rurimi ruvugwa n'abanyarwanda benshi?",a:["Icyongereza","Igifaransa","Ikinyarwanda","Igiswahili"],c:2},
+{q:"Inanga ni iki mu muco nyarwanda?",a:["Igikoresho cy'umuziki","Umwambaro","Inzu","Ibiribwa"],c:0},
+{q:"Ingoro y'Amateka y'Ubwami iri i Nyanza yitwa ite?",a:["Rukari","Rwesero","Kigali","Kayonza"],c:0},
+{q:"U Rwanda rufite intara zingahe, utabariyemo Umujyi wa Kigali?",a:["3","4","5","6"],c:1},
+{q:"Umuryango w'Afurika y'Iburasirazuba u Rwanda rwawinjiyemo mu wuhe mwaka?",a:["2000","2005","2007","2010"],c:2},
+{q:"Perezida wa kabiri w'u Rwanda ni nde?",a:["Grégoire Kayibanda","Juvénal Habyarimana","Pasteur Bizimungu","Paul Kagame"],c:1},
+{q:"Umunsi w'Ubwigenge bw'u Rwanda wizihizwa ryari?",a:["1 Nyakanga","4 Nyakanga","7 Mata","1 Ukwakira"],c:0}
+];
+
+let current=0,score=0,answered=false;
+
+function showQuestion(){
+answered=false;
+document.getElementById("progress").textContent=
+"Ikibazo "+(current+1)+" muri "+questions.length;
+document.getElementById("question").textContent=questions[current].q;
+const area=document.getElementById("answers");
+area.innerHTML="";
+questions[current].a.forEach((answer,index)=>{
+const btn=document.createElement("button");
+btn.className="option";
+btn.textContent=String.fromCharCode(65+index)+". "+answer;
+btn.onclick=()=>chooseAnswer(index,btn);
+area.appendChild(btn);
+});
+document.getElementById("next").hidden=true;
+}
+
+function chooseAnswer(index,btn){
+if(answered)return;
+answered=true;
+const q=questions[current];
+const buttons=document.querySelectorAll(".option");
+buttons.forEach((b,i)=>{
+b.disabled=true;
+if(i===q.c)b.style.background="#bbf7d0";
+});
+if(index===q.c){
+score++;
+}else{
+btn.style.background="#fecaca";
+}
+document.getElementById("next").hidden=false;
+document.getElementById("next").textContent=
+current===questions.length-1?"Reba amanota":"Ikibazo gikurikira";
+}
+
+function nextQuestion(){
+if(!answered)return;
+current++;
+if(current<questions.length){
+showQuestion();
+}else{
+finish();
+}
+}
+
+function finish(){
+document.getElementById("quiz").hidden=true;
+document.getElementById("progress").hidden=true;
+document.getElementById("next").hidden=true;
+document.getElementById("result").hidden=false;
+document.getElementById("result").innerHTML=
+"Wabonye "+score+" / "+questions.length+"<br><br>"+
+(score>=15?"Urakoze cyane! Ufite ubumenyi bwiza!":
+"Komereza aho! Ongera wige kandi ugerageze.");
+document.getElementById("restart").hidden=false;
+document.getElementById("share").hidden=false;
+}
+
+function restart(){
+current=0;score=0;
+document.getElementById("quiz").hidden=false;
+document.getElementById("progress").hidden=false;
+document.getElementById("result").hidden=true;
+document.getElementById("restart").hidden=true;
+document.getElementById("share").hidden=true;
+showQuestion();
+}
+
+function shareResult(){
+const message="Nakoze Quiz ya ISOKO Y'UBWENGE UMUCO n'AMAHORO. Nabonye "+score+" kuri "+questions.length+".";
+if(navigator.share){
+navigator.share({text:message}).catch(()=>{});
+}else if(navigator.clipboard){
+navigator.clipboard.writeText(message).then(()=>alert("Amanota yakoporowe!"));
+}else{
+alert(message);
+}
+}
+
+showQuestion();
+</script>
+</body>
+</html>
+  
